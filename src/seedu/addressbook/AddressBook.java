@@ -14,14 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Scanner;
-import java.util.Set;
+import java.util.*;
 
 /*
  * NOTE : =============================================================
@@ -87,6 +80,7 @@ public class AddressBook {
     private static final String MESSAGE_ERROR_READING_FROM_FILE = "Unexpected error: unable to read from file: %1$s";
     private static final String MESSAGE_ERROR_WRITING_TO_FILE = "Unexpected error: unable to write to file: %1$s";
     private static final String MESSAGE_PERSONS_FOUND_OVERVIEW = "%1$d persons found!";
+    private static final String MESSAGE_PERSONS_SORTED_OVERVIEW = "%1$d persons sorted!";
     private static final String MESSAGE_STORAGE_FILE_CREATED = "Created new empty storage file: %1$s";
     private static final String MESSAGE_WELCOME = "Welcome to your Address Book!";
     private static final String MESSAGE_USING_DEFAULT_FILE = "Using default storage file : " + DEFAULT_STORAGE_FILEPATH;
@@ -114,6 +108,10 @@ public class AddressBook {
     private static final String COMMAND_LIST_WORD = "list";
     private static final String COMMAND_LIST_DESC = "Displays all persons as a list with index numbers.";
     private static final String COMMAND_LIST_EXAMPLE = COMMAND_LIST_WORD;
+
+    private static final String COMMAND_SORT_WORD = "sort";
+    private static final String COMMAND_SORT_DESC = "Sorts every person in the a list based on their names alphanumerically.";
+    private static final String COMMAND_SORT_EXAMPLE = COMMAND_SORT_WORD;
 
     private static final String COMMAND_DELETE_WORD = "delete";
     private static final String COMMAND_DELETE_DESC = "Deletes a person identified by the index number used in "
@@ -375,6 +373,8 @@ public class AddressBook {
             return executeFindPersons(commandArgs);
         case COMMAND_LIST_WORD:
             return executeListAllPersonsInAddressBook();
+        case COMMAND_SORT_WORD:
+                return executeSortNameAlphanumerically();
         case COMMAND_DELETE_WORD:
             return executeDeletePerson(commandArgs);
         case COMMAND_CLEAR_WORD:
@@ -464,6 +464,16 @@ public class AddressBook {
      */
     private static String getMessageForPersonsDisplayedSummary(ArrayList<String[]> personsDisplayed) {
         return String.format(MESSAGE_PERSONS_FOUND_OVERVIEW, personsDisplayed.size());
+    }
+
+    /**
+     * Constructs a feedback message to summarise an operation that sorts a listing of persons by name alphanumerically.
+     *
+     * @param personsSorted used to generate summary
+     * @return summary message for persons displayed
+     */
+    private static String getMessageForPersonsSorted(ArrayList<String[]> personsSorted) {
+        return String.format(MESSAGE_PERSONS_SORTED_OVERVIEW, personsSorted.size());
     }
 
     /**
@@ -577,6 +587,26 @@ public class AddressBook {
         ArrayList<String[]> toBeDisplayed = getAllPersonsInAddressBook();
         showToUser(toBeDisplayed);
         return getMessageForPersonsDisplayedSummary(toBeDisplayed);
+    }
+
+    /**
+     * Sorts every one in the address book alphanumerically according to their names,and save the sorted list
+     * capital letters matters, for example B comes first before a
+     *
+     * @return feedback display message for the operation result
+     */
+    private static String executeSortNameAlphanumerically(){
+        Collections.sort(getAllPersonsInAddressBook(), new Comparator<String[]>() {
+            @Override
+            public int compare(String[] p1, String[] p2) {
+                return p1[0].compareTo(p2[0]);
+            }
+        });
+        showToUser(getAllPersonsInAddressBook());
+
+        savePersonsToFile(getAllPersonsInAddressBook(), storageFilePath);
+
+        return getMessageForPersonsSorted(getAllPersonsInAddressBook());
     }
 
     /**
@@ -847,6 +877,7 @@ public class AddressBook {
      *
      * @param person whose phone number you want
      */
+
     private static String getPhoneFromPerson(String[] person) {
         return person[PERSON_DATA_INDEX_PHONE];
     }
